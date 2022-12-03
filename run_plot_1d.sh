@@ -36,7 +36,7 @@ fi
 #     1.1.1 To plot catalog flux histogram: version 1: Ku-band 
 # ---------------------------
         if [ "$id" == "111" ]; then
-            file_cata="./catalog/callist_k.csv"
+            file_cata="./catalog/vla_callist_Ku-band.csv"
             file_imag="./pic/cata_flux_hist_k.png"
             ./plot_catalog_flux_hist.py ${file_cata} --file_out ${file_imag}
         fi

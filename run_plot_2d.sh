@@ -33,11 +33,28 @@ fi
 # ---------------------------
 #   1.1 To plot catalog sky distribution
 # ---------------------------
-#     1.1.1 To plot catalog sky distribution: version 1: Ku-band 
+#     1.1.1 To plot: Ku-band Full catalog
 # ---------------------------
         if [ "$id" == "111" ]; then
-            file_cata="./catalog/callist_k.csv"
+            file_cata="./catalog/vla_callist_Ku-band.csv"
             file_imag="./pic/cata_sky_dist_Ku.png"
+            ./plot_catalog_sky_dist.py ${file_cata} --file_out ${file_imag} \
+                --isgroup --plotGP --isshow
+        fi
+# ---------------------------
+#     1.1.2 To plot: Ku-band Flux >= 3 catalog
+# ---------------------------
+        if [ "$id" == "112" ]; then
+            file_cata="./catalog/vla_callist_Ku-band_3Jy.csv"
+            file_imag="./pic/cata_sky_dist_Ku_3Jy.png"
+            ./plot_catalog_sky_dist.py ${file_cata} --file_out ${file_imag} --plotGP --isshow
+        fi
+# ---------------------------
+#     1.1.2 To plot: Ku-band Flux >= 3 catalog
+# ---------------------------
+        if [ "$id" == "113" ]; then
+            file_cata="./catalog/vla_callist_Ku-band_1Jy.csv"
+            file_imag="./pic/cata_sky_dist_Ku_1Jy.png"
             ./plot_catalog_sky_dist.py ${file_cata} --file_out ${file_imag} --plotGP --isshow
         fi
 # =================================

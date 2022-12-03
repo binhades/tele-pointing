@@ -14,8 +14,6 @@ bla bla ~~~
 import argparse, os
 import csv
 import numpy as np
-import matplotlib.pyplot as plt
-import astropy.units as u
 
 def load_sour_list(cata_list,band,sour_hdr):
     with open(cata_list, 'r') as fin:
@@ -54,13 +52,12 @@ def load_sour_list(cata_list,band,sour_hdr):
             i = i + 1
     return sour_list
 
-def write_sour_list(sour_list, file_out,sour_hdr):
+def write_catalog_csv(sour_list, file_out,sour_hdr):
     with open(file_out, 'w') as fout:
         writer = csv.DictWriter(fout, fieldnames=sour_hdr)
         writer.writeheader()
         writer.writerows(sour_list)
     return 0
-
 
 def main(args):
     # check if file exist
@@ -76,7 +73,7 @@ def main(args):
 #    sour_hdr = {'IndexF': -1,'IndexB': -1, 'Name':'J'+line_str[0], 'Band':band, 'PC': line_str[2], 'RA':line_str[3], 'DEC':dec_str, 'Flux':None, 'Quality': None}
     sour_hdr = ['Index', 'Name', 'Band', 'PC', 'RA', 'DEC', 'Flux', 'Quality']
     sour_list = load_sour_list(args.vla_cata_list, args.band,sour_hdr)
-    write_sour_list(sour_list,args.file_out,sour_hdr)
+    write_catalog_csv(sour_list,args.file_out,sour_hdr)
 
     return 0
 

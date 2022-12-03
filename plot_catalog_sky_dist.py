@@ -14,21 +14,16 @@ bla bla ~~~
 import argparse, os
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib import colors
-from matplotlib.ticker import PercentFormatter
 from astropy.coordinates import SkyCoord
-import astropy.coordinates as coord
 import astropy.units as u
 
-def load_catalog(file_cata):
-    with open(file_cata,'r') as fin:
-        hdr = fin.readline().rstrip()
-    hdr = hdr.split(',')
-    sour_list = np.genfromtxt(file_cata,delimiter=',',skip_header=1,dtype=None,names=hdr,encoding=None)
+#===================
+def load_catalog_np(file_cata):
+    sour_list = np.genfromtxt(file_cata,delimiter=',',dtype=None,names=True,encoding=None)
     return sour_list
 
 #===================
-def plot_equ_sky_scatter(sources,size=None,colorInd=None,file_out=None,isshow=True,fontsize='x-large',plotGP=True,ax_factor=1):
+def plot_equ_sky_scatter(sources,size=None,colorInd=None,file_out=None,isshow=True,fontsize='x-large',plotGP=True,ax_factor=-1,groups=None):
 
     fig = plt.figure(figsize=(12,7))
     ax = fig.add_subplot(111, projection="aitoff")
@@ -52,18 +47,11 @@ def plot_equ_sky_scatter(sources,size=None,colorInd=None,file_out=None,isshow=Tr
         ax.plot(ax_factor*equp.ra.wrap_at(180*u.deg).radian, equp.dec.wrap_at(180*u.deg).radian, alpha=0.5, zorder=1, color='tab:green', linestyle='--')
         ax.plot(ax_factor*equm.ra.wrap_at(180*u.deg).radian, equm.dec.wrap_at(180*u.deg).radian, alpha=0.5, zorder=1, color='tab:green', linestyle='--')
        
-    ind0 = np.where(size < 0.5)
-    ind1 = np.where((size >= 0.5) & (size < 1.0))
-    ind2 = np.where((size >= 1.0) & (size < 3.0))
-    ind3 = np.where(size >= 3.0)
-    print(f'Number of Weak: {ind0[0].shape[0]}')
-    print(f'Number of Middle: {ind1[0].shape[0]}')
-    print(f'Number of Strong: {ind2[0].shape[0]}')
-    print(f'Number of Insane: {ind3[0].shape[0]}')
-    ax.scatter(ax_factor*sources.ra.wrap_at(180*u.deg).radian[ind0], sources.dec.wrap_at(180*u.deg).radian[ind0],s=size[ind0]*20,marker='o', color='blue')
-    ax.scatter(ax_factor*sources.ra.wrap_at(180*u.deg).radian[ind1], sources.dec.wrap_at(180*u.deg).radian[ind1],s=size[ind1]*20,marker='<', color='red')
-    ax.scatter(ax_factor*sources.ra.wrap_at(180*u.deg).radian[ind2], sources.dec.wrap_at(180*u.deg).radian[ind2],s=size[ind2]*20,marker='s', color='tab:brown')
-    ax.scatter(ax_factor*sources.ra.wrap_at(180*u.deg).radian[ind3], sources.dec.wrap_at(180*u.deg).radian[ind3],s=size[ind3]*20,marker='x', color='purple')
+    if groups is None:
+        ax.scatter(ax_factor*sources.ra.wrap_at(180*u.deg).radian, sources.dec.wrap_at(180*u.deg).radian,s=size*20)
+    else:
+        for grp in groups:
+            ax.scatter(ax_factor*sources.ra.wrap_at(180*u.deg).radian[grp['Ind']], sources.dec.wrap_at(180*u.deg).radian[grp['Ind']],s=size[grp['Ind']]*20,marker=grp['marker'], color=grp['color'])
     # -------------------------------------------------------------------------
     xt0 = ax_factor*np.array([-135,-90,-45,0,45,90,135])*np.pi/180
     xtl0 =         ['15$^\mathrm{h}$','18$^\mathrm{h}$','21$^\mathrm{h}$','0$^\mathrm{h}$','3$^\mathrm{h}$','6$^\mathrm{h}$','9$^\mathrm{h}$']
@@ -95,13 +83,29 @@ def catalog_to_Skycoord(sour_list):
     sour_coor = SkyCoord(ra=sour_list['RA'],dec=sour_list['DEC'],frame='icrs')
     return sour_coor
 #===================
-def flux_to_steps(flux,steps=[]):
-    indx = np.empty(flux.shape[0])
+def flux_to_groups(flux,steps=[0.5, 1.0, 3.0]):
+
+    groups = []
+
+    colors = ['blue','red','tab:brown','purple']
+    markers = ['o','<','s','x']
+    grp_lab = ['Weak','Middle','Strong','Insane']
+
     for i, s in enumerate(steps): # small -> large
         if i == 0:
-            indx[np.where(flux<s)] = i
-        indx[np.where(flux>=s)] = i + 1
-    return indx.astype(int)
+            ind = np.where(flux < s)
+        else:
+            ind = np.where((flux >= steps[i-1]) & (flux < steps[i]))
+        grp_para = {'Ind':ind,'color':colors[i],'marker':markers[i]}
+        groups.append(grp_para)
+        print(f'Number of {grp_lab[i]}: {ind[0].shape[0]}')
+        if i == len(steps) - 1:
+            ind = np.where(flux >= s)
+            grp_para = {'Ind':ind,'color':colors[i+1],'marker':markers[i+1]}
+            groups.append(grp_para)
+            print(f'Number of {grp_lab[i+1]}: {ind[0].shape[0]}')
+
+    return groups
 #===================
 def main(args):
     # check if file exist
@@ -109,12 +113,15 @@ def main(args):
         print(f"File {args.file_csv} does not exist.")
         return 0
 
-    sour_list = load_catalog(args.file_csv)
+    sour_list = load_catalog_np(args.file_csv)
     sour_coor = catalog_to_Skycoord(sour_list)
-    indx = flux_to_steps(sour_list['Flux'],steps=[0.5,1])
-    plot_equ_sky_scatter(sour_coor,size=sour_list['Flux'],colorInd=indx,\
-            file_out=args.file_out,fontsize='xx-large', \
-            ax_factor=args.ax_factor, isshow=args.isshow, plotGP=args.plotGP)
+    if args.isgroup:
+        groups = flux_to_groups(sour_list['Flux'])
+    else:
+        groups = None
+    plot_equ_sky_scatter(sour_coor,size=sour_list['Flux'],fontsize='xx-large', \
+            file_out=args.file_out, ax_factor=args.ax_factor, \
+            isshow=args.isshow, plotGP=args.plotGP, groups=groups)
 
     return 0
 
@@ -126,9 +133,10 @@ if __name__ == '__main__':
 
     parser.add_argument('file_csv', type=str, help='the input catalog csv file') 
     parser.add_argument('--file_out', type=str, help='the output figure name')
-    parser.add_argument('--ax_factor', type=int, default=-1,help='the output figure name')
-    parser.add_argument('--plotGP', action='store_true', help='set to plot Galactic plane')
-    parser.add_argument('--isshow', action='store_true', help='set to plot Galactic plane')
+    parser.add_argument('--ax_factor', type=int, default=-1,help='X-axis reverse factor, -1')
+    parser.add_argument('--plotGP', action='store_true', help='set to add Galactic plane')
+    parser.add_argument('--isshow', action='store_true', help='set to show plot')
+    parser.add_argument('--isgroup',action='store_true', help='set to plot source in flux groups')
 
     args = parser.parse_args()
     main(args)

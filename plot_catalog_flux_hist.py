@@ -16,13 +16,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import colors
 from matplotlib.ticker import PercentFormatter
-import astropy.units as u
 
-def load_catalog(file_cata):
-    with open(file_cata,'r') as fin:
-        hdr = fin.readline().rstrip()
-    hdr = hdr.split(',')
-    sour_list = np.genfromtxt(file_cata,delimiter=',',skip_header=1,dtype=None,names=hdr,encoding=None)
+def load_catalog_np(file_cata):
+    sour_list = np.genfromtxt(file_cata,delimiter=',',dtype=None,names=True,encoding=None)
     return sour_list
 
 def plot_hist(flux,n_bins=200, file_out=None,fext='png',isshow=True,plottype='line',xmin=0,xmax=5,fontsize='xx-large',xlabel='Flux [Jy]',ylabel='Counts'):
@@ -69,7 +65,7 @@ def main(args):
         print(f"File {args.file_csv} does not exist.")
         return 0
 
-    sour_list = load_catalog(args.file_csv)
+    sour_list = load_catalog_np(args.file_csv)
     plot_hist(sour_list['Flux'],file_out=args.file_out)
 
     return 0
