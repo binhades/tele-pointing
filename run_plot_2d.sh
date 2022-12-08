@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 Help()
 {
     echo "Set '-n id ' to choose plot taskes:"
