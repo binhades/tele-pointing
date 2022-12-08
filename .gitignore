@@ -1,3 +1,6 @@
+# LB add for vim
+*.*~
+.*.spw
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
